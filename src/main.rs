@@ -1,38 +1,40 @@
 #[allow(unused_imports)]
 use std::io::{self, Write};
 
-use regex::Regex;
 use std::env;
 
 use std::os::unix::fs::PermissionsExt;
 
+use std::process::Command;
+
 fn main() {
-
-    let echo_re = Regex::new(r"^(echo)").unwrap();
-    let type_re = Regex::new(r"^(type)").unwrap();
-
 
     loop {
         print!("$ ");
         io::stdout().flush().unwrap();
 
-        let mut command = String::new();
-        io::stdin().read_line(&mut command).unwrap();
+        let mut command_with_args = String::new();
+        io::stdin().read_line(&mut command_with_args).unwrap();
 
-        match command.trim() {
-            s if echo_re.is_match(s) => echo_command(s.trim_start_matches("echo")),
-            s if type_re.is_match(s) => type_command(s.trim_start_matches("type")),
+        let input = command_with_args.trim();
+        let (command, args) = input.split_once(' ').unwrap_or((input, ""));
+
+        match command {
+            "echo" => echo_command(args),
+            "type" => type_command(args),
             "exit" => break,
-            "help" => println!("Available commands: help, exit, type, echo"),
-            _ => print!("{}: command not found\n", command.trim()),
+            "help" => println!("Available built-in commands: help, exit, type, echo"),
+            _ => match find_in_path(command) {
+                Some(path) => run_external_command(path, args),
+                None => print!("{}: command not found\n", command),
+        }
         }
     }
 }
 
 
 fn echo_command(args: &str) {
-    let s = args.strip_prefix(' ').unwrap_or(args);
-    println!("{}", s);
+    println!("{}", args);
 }
 
 fn find_in_path(command: &str) -> Option<std::path::PathBuf> {
@@ -41,6 +43,7 @@ fn find_in_path(command: &str) -> Option<std::path::PathBuf> {
             let path = std::path::Path::new(dir).join(command);
            std::fs::metadata(&path)
            .ok()
+           // Check if path as permissions and is executable
             .filter(|meta| meta.permissions().mode() & 0o111 != 0)
             .map(|_| path)
         })
@@ -48,15 +51,23 @@ fn find_in_path(command: &str) -> Option<std::path::PathBuf> {
 }
 
 fn type_command(args: &str) {
-    let s = args.strip_prefix(' ').unwrap_or(args);
-    match s {
-        "exit" | "help" | "echo" | "type" => println!("{} is a shell builtin", s),
-        _ => match find_in_path(s) {
-            Some(path) => println!("{} is {}", s, path.display()),
-            None => println!("{}: not found", s),
+    match args {
+        "exit" | "help" | "echo" | "type" => println!("{} is a shell builtin", args),
+        _ => match find_in_path(args) {
+            Some(path) => println!("{} is {}", args, path.display()),
+            None => println!("{}: not found", args),
         }
     }
+}
 
-    
-    
+fn run_external_command(path: std::path::PathBuf, args: &str) {
+    let args_vec: Vec<&str> = args.split_whitespace().collect();
+    match Command::new(path).args(&args_vec).status() {
+        Ok(status) => {
+            if !status.success() {
+                eprintln!("Command exited with status {}", status);
+            }
+        }
+        Err(e) => eprintln!("Failed to execute: {}", e),
+    }
 }
