@@ -35,7 +35,7 @@ fn echo_command(args: &str) {
 fn type_command(args: &str) {
     let s = args.strip_prefix(' ').unwrap_or(args);
     match s {
-        "exit" | "help" | "echo" | "type" => println!("{} is a built-in command", s),
+        "exit" | "help" | "echo" | "type" => println!("{} is a shell builtin", s),
         _ => println!("{}: not found", s),
     }
 }
