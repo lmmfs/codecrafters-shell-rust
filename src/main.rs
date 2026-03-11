@@ -2,6 +2,7 @@
 use std::io::{self, Write};
 
 use regex::Regex;
+use std::env;
 
 fn main() {
 
@@ -32,10 +33,24 @@ fn echo_command(args: &str) {
     println!("{}", s);
 }
 
+fn find_in_path(command: &str) -> Option<std::path::PathBuf> {
+    env::var("PATH").ok()?.split(':')
+        .filter_map(|dir| {
+            let path = std::path::Path::new(dir).join(command);
+            if path.exists() && path.is_file() {
+                Some(path)
+            } else {
+                None
+            }
+        })
+        .next()
+}
+
 fn type_command(args: &str) {
     let s = args.strip_prefix(' ').unwrap_or(args);
-    match s {
-        "exit" | "help" | "echo" | "type" => println!("{} is a shell builtin", s),
-        _ => println!("{}: not found", s),
+    match find_in_path(s) {
+        Some(path) => println!("{} is {}", s, path.display()),
+        None => println!("{}: not found", s),
     }
+    
 }
