@@ -22,6 +22,10 @@ fn main() {
         match command {
             "echo" => echo_command(args),
             "type" => type_command(args),
+            "pwd" => match env::current_dir() {
+                Ok(path) => println!("{}", path.display()),
+                Err(e) => eprintln!("Error getting current directory: {}", e),
+            },
             "exit" => break,
             "help" => println!("Available built-in commands: help, exit, type, echo"),
             _ => match find_in_path(command) {
@@ -52,7 +56,7 @@ fn find_in_path(command: &str) -> Option<std::path::PathBuf> {
 
 fn type_command(args: &str) {
     match args {
-        "exit" | "help" | "echo" | "type" => println!("{} is a shell builtin", args),
+        "exit" | "help" | "echo" | "type" | "pwd" => println!("{} is a shell builtin", args),
         _ => match find_in_path(args) {
             Some(path) => println!("{} is {}", args, path.display()),
             None => println!("{}: not found", args),
