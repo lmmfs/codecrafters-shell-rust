@@ -7,6 +7,8 @@ use std::os::unix::fs::PermissionsExt;
 
 use std::process::Command;
 
+const BUILTINS: &[&str] = &["help", "exit", "type", "echo", "pwd", "cd"];
+
 fn main() {
 
     loop {
@@ -28,7 +30,7 @@ fn main() {
             },
             "cd" => cd_command(args),
             "exit" => break,
-            "help" => println!("Available built-in commands: help, exit, type, echo"),
+            "help" => println!("Available built-in commands: {}", BUILTINS.join(", ")),
             _ => match find_in_path(command) {
                 Some(_) => run_external_command(command, args),
                 None => print!("{}: command not found\n", command),
@@ -56,21 +58,29 @@ fn find_in_path(command: &str) -> Option<std::path::PathBuf> {
 }
 
 fn type_command(args: &str) {
-    match args {
-        "exit" | "help" | "echo" | "type" | "pwd" => println!("{} is a shell builtin", args),
-        _ => match find_in_path(args) {
-            Some(path) => println!("{} is {}", args, path.display()),
-            None => println!("{}: not found", args),
-        }
+    if BUILTINS.contains(&args) {
+        println!("{} is a shell builtin", args);
+        return;
+    } 
+
+    match find_in_path(args) {
+        Some(path) => println!("{} is {}", args, path.display()),
+        None => println!("{}: not found", args),
     }
 }
 
 fn cd_command(args: &str) {
-    if let Err(e) = env::set_current_dir(args) {
+    let target = if args.is_empty() || args == "~" {
+        env::var("HOME").unwrap_or_else(|_| String::from("/"))
+    } else {
+        args.to_string()
+    };
+
+    if let Err(e) = env::set_current_dir(&target) {
         match e.kind() {
-            std::io::ErrorKind::NotFound => eprintln!("cd: {}: No such file or directory", args),
-            std::io::ErrorKind::PermissionDenied => eprintln!("cd: {}: Permission denied", args),
-            _ => eprintln!("cd: {}: {}", args, e),
+            std::io::ErrorKind::NotFound => eprintln!("cd: {}: No such file or directory", target),
+            std::io::ErrorKind::PermissionDenied => eprintln!("cd: {}: Permission denied", target),
+            _ => eprintln!("cd: {}: {}", target, e),
         }
     }
 }
