@@ -4,6 +4,8 @@ use std::io::{self, Write};
 use regex::Regex;
 use std::env;
 
+use std::os::unix::fs::PermissionsExt;
+
 fn main() {
 
     let echo_re = Regex::new(r"^(echo)").unwrap();
@@ -37,20 +39,24 @@ fn find_in_path(command: &str) -> Option<std::path::PathBuf> {
     env::var("PATH").ok()?.split(':')
         .filter_map(|dir| {
             let path = std::path::Path::new(dir).join(command);
-            if path.exists() && path.is_file() {
-                Some(path)
-            } else {
-                None
-            }
+           std::fs::metadata(&path)
+           .ok()
+            .filter(|meta| meta.permissions().mode() & 0o111 != 0)
+            .map(|_| path)
         })
         .next()
 }
 
 fn type_command(args: &str) {
     let s = args.strip_prefix(' ').unwrap_or(args);
-    match find_in_path(s) {
-        Some(path) => println!("{} is {}", s, path.display()),
-        None => println!("{}: not found", s),
+    match s {
+        "exit" | "help" | "echo" | "type" => println!("{} is a shell builtin", s),
+        _ => match find_in_path(s) {
+            Some(path) => println!("{} is {}", s, path.display()),
+            None => println!("{}: not found", s),
+        }
     }
+
+    
     
 }
