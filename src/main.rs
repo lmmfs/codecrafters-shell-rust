@@ -25,7 +25,7 @@ fn main() {
             "exit" => break,
             "help" => println!("Available built-in commands: help, exit, type, echo"),
             _ => match find_in_path(command) {
-                Some(path) => run_external_command(path, args),
+                Some(_) => run_external_command(command, args),
                 None => print!("{}: command not found\n", command),
         }
         }
@@ -60,9 +60,9 @@ fn type_command(args: &str) {
     }
 }
 
-fn run_external_command(path: std::path::PathBuf, args: &str) {
+fn run_external_command(command: &str, args: &str) {
     let args_vec: Vec<&str> = args.split_whitespace().collect();
-    match Command::new(path).args(&args_vec).status() {
+    match Command::new(command).args(&args_vec).status() {
         Ok(status) => {
             if !status.success() {
                 eprintln!("Command exited with status {}", status);
