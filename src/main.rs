@@ -26,6 +26,7 @@ fn main() {
                 Ok(path) => println!("{}", path.display()),
                 Err(e) => eprintln!("Error getting current directory: {}", e),
             },
+            "cd" => cd_command(args),
             "exit" => break,
             "help" => println!("Available built-in commands: help, exit, type, echo"),
             _ => match find_in_path(command) {
@@ -60,6 +61,16 @@ fn type_command(args: &str) {
         _ => match find_in_path(args) {
             Some(path) => println!("{} is {}", args, path.display()),
             None => println!("{}: not found", args),
+        }
+    }
+}
+
+fn cd_command(args: &str) {
+    if let Err(e) = env::set_current_dir(args) {
+        match e.kind() {
+            std::io::ErrorKind::NotFound => eprintln!("cd: {}: No such file or directory", args),
+            std::io::ErrorKind::PermissionDenied => eprintln!("cd: {}: Permission denied", args),
+            _ => eprintln!("cd: {}: {}", args, e),
         }
     }
 }
