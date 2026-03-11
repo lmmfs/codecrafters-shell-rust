@@ -26,6 +26,6 @@ fn main() {
 
 
 fn echo_command(args: &str) {
-
-    println!("{}", args);
+    let s = args.strip_prefix(' ').unwrap_or(args);
+    println!("{}", s);
 }
