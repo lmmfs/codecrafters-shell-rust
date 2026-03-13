@@ -52,7 +52,7 @@ fn arg_parse(args:&str) -> Vec<String> {
         
         match c {
             '\\' if !in_quotes && !escape_next => escape_next = true,
-            '"' if !escape_next => {
+            '"' if !in_quotes && !escape_next => {
                 in_double_quotes = !in_double_quotes;
                 escape_next = false;
             },
