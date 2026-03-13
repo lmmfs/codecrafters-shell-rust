@@ -34,7 +34,7 @@ fn main() {
             "exit" => break,
             "help" => println!("Available built-in commands: {}", BUILTINS.join(", ")),
             _ => match find_in_path(command) {
-                Some(_) => run_external_command(command, args),
+                Some(_) => run_external_command(command, args_vec),
                 None => print!("{}: command not found\n", command),
         }
         }
@@ -43,7 +43,6 @@ fn main() {
 
 fn arg_parse(args:&str) -> Vec<String> {
     let mut arg_vec: Vec<String> = Vec::new();
-    //let mut block_size = 0;
     let mut in_quotes = false;
     let mut current_token = String::new();
 
@@ -70,7 +69,7 @@ fn arg_parse(args:&str) -> Vec<String> {
 
 
 fn echo_command(args: Vec<String>) {
-    println!("{}", args.join(""));
+    println!("{}", args.join(" "));
 }
 
 fn find_in_path(command: &str) -> Option<std::path::PathBuf> {
@@ -114,9 +113,8 @@ fn cd_command(args: &str) {
     }
 }
 
-fn run_external_command(command: &str, args: &str) {
-    let args_vec: Vec<&str> = args.split_whitespace().collect();
-    match Command::new(command).args(&args_vec).status() {
+fn run_external_command(command: &str, args: Vec<String>) {
+    match Command::new(command).args(&args).status() {
         Ok(status) => {
             if !status.success() {
                 eprintln!("Command exited with status {}", status);
