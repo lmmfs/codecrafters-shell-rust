@@ -51,13 +51,11 @@ fn arg_parse(args:&str) -> Vec<String> {
     for c in args.chars() {
         
         match c {
-            '\\' if !escape_next => escape_next = true,
-
+            '\\' if !in_quotes && !in_double_quotes  && !escape_next => escape_next = true,
             '"' if !escape_next => {
                 in_double_quotes = !in_double_quotes;
                 escape_next = false;
             },
-
             '\'' if !in_double_quotes && !escape_next => {
                 in_quotes = !in_quotes;
                 escape_next = false;
