@@ -21,8 +21,10 @@ fn main() {
         let input = command_with_args.trim();
         let (command, args) = input.split_once(' ').unwrap_or((input, ""));
 
+        let args_vec = arg_parse(args);
+
         match command {
-            "echo" => echo_command(args),
+            "echo" => echo_command(args_vec),
             "type" => type_command(args),
             "pwd" => match env::current_dir() {
                 Ok(path) => println!("{}", path.display()),
@@ -39,9 +41,36 @@ fn main() {
     }
 }
 
+fn arg_parse(args:&str) -> Vec<String> {
+    let mut arg_vec: Vec<String> = Vec::new();
+    //let mut block_size = 0;
+    let mut in_quotes = false;
+    let mut current_token = String::new();
 
-fn echo_command(args: &str) {
-    println!("{}", args);
+    for c in args.chars() {
+        
+        match c {
+            '\'' => in_quotes = !in_quotes,
+            ' ' if !in_quotes => {
+                if !current_token.is_empty() {
+                    arg_vec.push(current_token.clone());
+                    current_token.clear();
+                }
+            }
+            _ => current_token.push(c),
+        }
+    }
+
+    if !current_token.is_empty() {
+        arg_vec.push(current_token);
+    }
+    
+    arg_vec
+}
+
+
+fn echo_command(args: Vec<String>) {
+    println!("{}", args.join(""));
 }
 
 fn find_in_path(command: &str) -> Option<std::path::PathBuf> {
