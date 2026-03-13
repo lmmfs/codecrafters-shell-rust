@@ -45,13 +45,27 @@ fn arg_parse(args:&str) -> Vec<String> {
     let mut arg_vec: Vec<String> = Vec::new();
     let mut in_quotes = false;
     let mut in_double_quotes = false;
+    let mut escape_next = false;
     let mut current_token = String::new();
 
     for c in args.chars() {
         
         match c {
-            '"' => in_double_quotes = !in_double_quotes,
-            '\'' if !in_double_quotes => in_quotes = !in_quotes,
+            '\\' if !escape_next => escape_next = true,
+
+            '"' if !escape_next => {
+                in_double_quotes = !in_double_quotes;
+                escape_next = false;
+            },
+
+            '\'' if !in_double_quotes && !escape_next => {
+                in_quotes = !in_quotes;
+                escape_next = false;
+            },
+            ' ' if escape_next => {
+                current_token.push(' ');
+                escape_next = false;
+            }
             ' ' if !in_quotes && !in_double_quotes => {
                 if !current_token.is_empty() {
                     arg_vec.push(current_token.clone());
