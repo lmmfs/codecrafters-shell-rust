@@ -8,7 +8,7 @@ pub fn get_user_input() -> Result<String> {
     stdin().read_line(&mut user_input)
         .context("Reading User Input")
         .unwrap();
-    Ok(user_input.trim_end().to_string())
+    Ok(user_input.trim().to_owned())
 }
 
 pub fn prompt() {
