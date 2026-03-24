@@ -11,9 +11,6 @@ mod custom_errors;
 pub fn run() -> Result<()>{
     prompt();
     let input = get_user_input().unwrap();
-    //println!("{}", input);
-
-    //let message = format!("{input}: command not found");
     let error = CustomError::CommandNotFound(input);
     print_error(error);
 
