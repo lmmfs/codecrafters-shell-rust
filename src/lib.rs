@@ -12,7 +12,7 @@ pub fn run() -> Result<()>{
     let input = get_user_input().unwrap();
     //println!("{}", input);
 
-    let message = format!("{input}:  command not found");
+    let message = format!("{input}: command not found");
     print_error(message);
 
     Ok(())
