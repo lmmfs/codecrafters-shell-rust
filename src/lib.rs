@@ -3,7 +3,10 @@ use std::io::{self, Write};
 
 use anyhow::{Context, Result};
 
-use crate::{builtins::Builtin, custom_errors::CustomError, utils::{exit, get_command, print_error, prompt}};
+use crate::{
+    builtins::{builtin::Builtin, echo::echo},
+    custom_errors::CustomError,
+    utils::{get_command, print_error, prompt}};
 
 pub mod utils;
 mod custom_errors;
@@ -14,13 +17,16 @@ pub fn run() -> Result<()>{
         prompt();
         let command = get_command().context("Getting Command").unwrap();
         match  command{
-            Builtin::Exit => exit(0),
+            Builtin::Echo(arguments) => echo(arguments),
+            Builtin::Exit => break,
             Builtin::NotFound(command_str) => {
                 let error = CustomError::CommandNotFound(command_str);
                 print_error(error);
             }
         }
     }
-    #[allow(unreachable_code)]
     Ok(())
 }
+
+
+

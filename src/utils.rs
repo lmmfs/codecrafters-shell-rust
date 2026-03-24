@@ -25,9 +25,13 @@ pub fn print_error(message: impl Display) {
 
 pub fn get_command() -> Result<Builtin> {
     let input = get_user_input().unwrap();
-    let command = Builtin::from(input.as_str());
+    let mut user_input_iter = input.split_whitespace();
+    let command = user_input_iter.next().unwrap_or(" ");
+    let arguments: Vec<String> = user_input_iter.map(|s| s.to_string()).collect();
+    let command = Builtin::from((command.to_owned(), arguments));
     Ok(command)
 }
+
 
 pub fn exit(code: i32) {
     process::exit(code)
