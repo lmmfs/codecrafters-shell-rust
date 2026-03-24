@@ -9,10 +9,12 @@ mod utils;
 mod custom_errors;
 
 pub fn run() -> Result<()>{
-    prompt();
-    let input = get_user_input().unwrap();
-    let error = CustomError::CommandNotFound(input);
-    print_error(error);
-
+    loop {
+        prompt();
+        let input = get_user_input().unwrap();
+        let error = CustomError::CommandNotFound(input);
+        print_error(error);
+    }
+    #[allow(unreachable_code)]
     Ok(())
 }
