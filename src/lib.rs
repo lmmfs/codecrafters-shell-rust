@@ -17,7 +17,7 @@ pub fn run() -> Result<()>{
         prompt();
         let command = get_command().context("Getting Command").unwrap();
         match  command{
-            Builtin::Echo(arguments) => echo(arguments),
+            Builtin::Echo(arguments) => echo(&arguments),
             Builtin::Exit => break,
             Builtin::Type(arguments) => builtin_type(arguments),
             Builtin::NotFound(command_str) => {

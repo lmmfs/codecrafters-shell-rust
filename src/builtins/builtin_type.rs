@@ -1,19 +1,34 @@
-use crate::builtins::{Builtin, CommandArguments, echo::echo};
-
+use crate::{builtins::{Builtin, CommandArguments, echo::echo}, utils::find_in_path};
 
 
 pub fn builtin_type(arguments: CommandArguments) {
     let command_input = arguments.first().cloned().unwrap_or_default();
     let _command = Builtin::from(command_input.clone());
-    let mut message = String::new();
-    message.push_str(&command_input);
+    let mut message: Vec<String> = vec![];
 
-    if matches!(_command, Builtin::NotFound(_)){
-        message.push_str(": not found");
-    } else {
-        message.push_str(" is a shell builtin");
+    message.push(command_input.clone());
+
+    if !matches!(_command, Builtin::NotFound(_)){
+        message.push(format!("is a shell builtin"));
+        echo(&message);
+        return;
+
     }
 
-    echo(vec![message]);
+    match find_in_path(command_input.as_str()) {
+        Some(path) => {
+            message.push(format!(" is {}", path.display()));
+        }
+            ,
+        None => message.push(format!(": not found")),
+    }
+
+
+    let message = message.join("");
+    echo(&[message]);
 
 }
+
+
+
+

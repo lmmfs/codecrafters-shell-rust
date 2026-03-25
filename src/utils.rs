@@ -1,5 +1,5 @@
 pub use std::process::exit;
-use std::{fmt::Display, io::{self, Write, stdin}};
+use std::{env, fmt::Display, io::{self, Write, stdin}, os::unix::fs::PermissionsExt};
 
 use anyhow::{Context, Result};
 
@@ -30,4 +30,18 @@ pub fn get_command() -> Result<Builtin> {
     let arguments: Vec<String> = user_input_iter.map(|s| s.to_string()).collect();
     let command = Builtin::from((command.to_owned(), arguments));
     Ok(command)
+}
+
+
+pub fn find_in_path(command: &str) -> Option<std::path::PathBuf> {
+    env::var("PATH").ok()?.split(':')
+    .filter_map(|dir| {
+        let path = std::path::Path::new(dir).join(command);
+        std::fs::metadata(&path)
+        .ok()
+        // Check if path as permissions and is executable
+        .filter(|meta| meta.permissions().mode() & 0o111 != 0)
+        .map(|_| path)
+    })
+    .next()
 }

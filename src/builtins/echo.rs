@@ -1,3 +1,3 @@
-pub fn echo(arguments: Vec<String>) {
+pub fn echo(arguments: &[String]) {
     println!("{}", arguments.join(" "))
 }
