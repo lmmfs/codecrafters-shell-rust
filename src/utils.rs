@@ -1,9 +1,9 @@
-
-use std::{fmt::Display, io::{self, Write, stdin}, process};
+pub use std::process::exit;
+use std::{fmt::Display, io::{self, Write, stdin}};
 
 use anyhow::{Context, Result};
 
-use crate::builtins::builtin::Builtin;
+use crate::builtins::Builtin;
 
 
 pub fn get_user_input() -> Result<String> {
@@ -30,9 +30,4 @@ pub fn get_command() -> Result<Builtin> {
     let arguments: Vec<String> = user_input_iter.map(|s| s.to_string()).collect();
     let command = Builtin::from((command.to_owned(), arguments));
     Ok(command)
-}
-
-
-pub fn exit(code: i32) {
-    process::exit(code)
 }
