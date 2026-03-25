@@ -3,7 +3,7 @@ use std::{fmt::Display, io::{self, Write, stdin}, process};
 
 use anyhow::{Context, Result};
 
-use crate::builtins::Builtin;
+use crate::builtins::builtin::Builtin;
 
 
 pub fn get_user_input() -> Result<String> {
