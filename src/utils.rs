@@ -1,9 +1,9 @@
 pub use std::process::exit;
-use std::{env, fmt::Display, io::{self, Write, stdin}, os::unix::fs::PermissionsExt};
+use std::{env::{self, split_paths}, fmt::Display, fs::DirEntry, io::{self, Write, stdin}, os::unix::fs::PermissionsExt, path::PathBuf, process::Command};
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 
-use crate::builtins::Builtin;
+use crate::{builtins::Builtin, custom_errors::CustomError};
 
 
 pub fn get_user_input() -> Result<String> {
@@ -32,16 +32,64 @@ pub fn get_command() -> Result<Builtin> {
     Ok(command)
 }
 
+pub fn get_path() -> Result<Vec<PathBuf>> {
+    let path = env::var("PATH").context("Getting Path").unwrap();
+    let split_paths = split_paths(&path).map(|path | {
+        if path.is_file() {
+            bail!("PATH variable is a file")
+        } else {
+            Ok(path)
+        }
+    } );
 
-pub fn find_in_path(command: &str) -> Option<std::path::PathBuf> {
-    env::var("PATH").ok()?.split(':')
-    .filter_map(|dir| {
-        let path = std::path::Path::new(dir).join(command);
-        std::fs::metadata(&path)
-        .ok()
-        // Check if path as permissions and is executable
-        .filter(|meta| meta.permissions().mode() & 0o111 != 0)
-        .map(|_| path)
-    })
-    .next()
+    split_paths.collect()
 }
+
+
+pub fn find_in_path(name: &str, paths: &[PathBuf]) ->Option<DirEntry> {
+    for path in paths {
+        let Ok(directory) = std::fs::read_dir(path) else {
+            continue;
+        };
+
+        for entry in directory {
+            let Ok(entry) = entry else {
+                continue;
+            };
+
+            if entry.file_name().to_str().unwrap_or_default() != name {
+                continue;
+            }
+
+            let Ok(metadada) = entry.metadata() else {
+                continue;
+            };
+
+            if metadada.permissions().mode() & 0o111 == 0 {
+                continue;
+            }
+
+            return Some(entry);
+        }
+    }
+    None
+}
+
+
+pub fn run_external_command(command: &str, args: Vec<String>) {
+    match Command::new(command).args(&args).status() {
+        Ok(status) => {
+            if !status.success() {
+                let error = CustomError::CommandInvalidExitStatus(status.to_string());
+                print_error(error);
+            }
+        }
+        Err(e) => {
+            let error = CustomError::CommandExecutionFailed(e.to_string());
+            print_error(error);
+
+        },
+    }
+}
+
+
