@@ -10,7 +10,7 @@ pub fn builtin_type(arguments: CommandArguments, paths: &[PathBuf]) {
 
     message.push(type_input.clone());
 
-    if !matches!(_command, Builtin::NotFound(_)){
+    if !matches!(_command, Builtin::NotFound(_, _)){
         message.push(format!("is a shell builtin"));
         echo(&message);
         return;
