@@ -1,5 +1,5 @@
 pub use std::process::exit;
-use std::{env::{self, split_paths}, fmt::Display, fs::DirEntry, io::{self, Write, stdin}, os::unix::fs::PermissionsExt, path::PathBuf, process::Command};
+use std::{env::{self, split_paths}, fmt::Display, fs::DirEntry, io::{self, Write, stdin}, os::unix::{fs::PermissionsExt, process::CommandExt}, path::PathBuf, process::Command};
 
 use anyhow::{Context, Result, bail};
 
@@ -76,8 +76,11 @@ pub fn find_in_path(name: &str, paths: &[PathBuf]) ->Option<DirEntry> {
 }
 
 
-pub fn run_external_command(command: &str, args: Vec<String>) {
-    match Command::new(command).args(&args).status() {
+pub fn run_external_command(command: &str, command_name: &str, args: &[String]) {
+    let mut cmd = Command::new(command);
+    cmd.arg0(command_name);
+    cmd.args(args);
+    match cmd.status() {
         Ok(status) => {
             if !status.success() {
                 let error = CustomError::CommandInvalidExitStatus(status.to_string());

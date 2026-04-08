@@ -28,7 +28,7 @@ pub fn run() -> Result<()>{
                     Some(entry) => {
                         let path_buf = entry.path();
                         let path = path_buf.into_os_string().into_string().unwrap_or("unknown path".to_owned());
-                        run_external_command(path.as_str(), arguments);
+                        run_external_command(path.as_str(), command_str.as_str(), &arguments);
                     },
                     None => {
                         let error = CustomError::CommandNotFound(command_str);
